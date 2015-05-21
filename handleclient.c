@@ -1,3 +1,5 @@
+#include <stdio.h>
+#define BUFSIZE 1000
 int handle_client(int sd){
     char buf[BUFSIZE];
     int cc; //Character count
