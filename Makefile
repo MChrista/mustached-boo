@@ -1,13 +1,10 @@
 CC = gcc
 OBJ = file-o-req.o file-o-res.o
 
-all: req result
-
-req : file-o-req.o
-	$(CC) -o $@ file-o-req.o
+all: result
 
 result : file-o-res.o
-	$(CC) -o $@ file-o-res.o
+	$(CC) -o $@ file-o-res.o libsockets.a
 
 %.o: %.c
 	$(CC) -c $<
