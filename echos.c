@@ -1,4 +1,9 @@
 #include <netinet/in.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/socket.h>
+#include <unistd.h>
+#include <arpa/inet.h>
 static int accept_clients(int sd){
     int retcode,nsd; //New Socket Descriptor
     struct sockaddr_in from_client; //in = ipv4
@@ -26,7 +31,7 @@ int main(int argc, char **argv){
     //sd < 0 Fehler
     int sd= passive_tcp(port);
     if(sd<0){
-        print("error");
+        printf("error");
     }else{
         
     }
