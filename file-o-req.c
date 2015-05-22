@@ -1,6 +1,4 @@
 
-/*
-
 #define BUFSIZE 1000
 #include<stdio.h>
 #include<stdlib.h>
@@ -14,68 +12,67 @@
 #include<netdb.h>
 #include<unistd.h>
 
+#include "libsockets/connect_tcp.h"
+
+
+
 int main(int argc, char **argv){
     int port;
-    port = atoi(argv[1]);
+    port = atoi(argv[2]);
+    char *file_name = argv[3];
+    
+    FILE *fp;
+    long lSize;
+    char *buffer;
+
+    fp = fopen ( file_name , "rb" );
+    if( !fp ) perror(file_name),exit(1);
+
+    fseek( fp , 0L , SEEK_END);
+    lSize = ftell( fp );
+    rewind( fp );
+
+    /* allocate memory for entire content */
+    buffer = calloc( 1, lSize+1 );
+    if( !buffer ) fclose(fp),fputs("memory alloc fails",stderr),exit(1);
+
+    /* copy the file into the buffer */
+    if( 1!=fread( buffer , lSize, 1 , fp) )
+    fclose(fp),free(buffer),fputs("entire read fails",stderr),exit(1);
+
+    /* do your work here, buffer is a string contains the whole text */
+
+    // cc-2 weil vom telnet immer noch /n (Return) abgezogen werden muss!
+    //int length = cc-2;
+
+    
+    // close file buffer
     
     //Socket Descriptor
     //sd < 0 Fehler
-    int sd= passive_tcp(port);
+    int sd= connect_tcp(argv[1],port);
     if(sd<0){
-        print("error");
+        printf("Failed to create Socket\n");
     }else{
+        printf("Success by creating Socket\n");
         
     }
     
-    accept_clients(sd);
+    if(write(sd,buffer,lSize)<0){
+        printf("%s\n", "Writing to the client went wrong!");
+    }
+    
+    printf("client to Server: %s\n\n", buffer);
+    
+    int cc;
+    char buf[BUFSIZE];
+    while( (cc = read(sd, buf, BUFSIZE)) > 0){
+        int length = cc;
+        printf("server to client: %.*s\n", length, buf);
+    }
+    fclose(fp);
+    free(buffer);
+    close(sd);
     exit(0);
     
 }
-
-
-static int accept_clients(int sd){
-    int retcode,nsd; //New Socket Descriptor
-    struct sockaddr_in from client; //in = ipv4
-    
-    
-    while(1){
-        from_client_len = sizeof(from_client);
-        nsd = accept(sd/*in*/,(struct sockaddr*)&from_client/*in out*/, &from_client_len/*in out*/) //generische Struktur wird erwartet, Länge der Socketaddresse
-                
-        //Fehler bei nsd <0 -> Fehler: break
-                
-                
-        //Immer nur ein Client kann am Server arbeiten. Es empfiehlt sich über fork den neuen Prozess einzuhängen        
-        handle_client(nsd);
-        
-    }
-    return nsd;
-}
-
-//Static bedeutet, dass es in anderen Modulen nicht sichtbar ist
-static int handle_client(int sd){
-    char buf[BUFSIZE];
-    int cc; //Character count
-    while( (cc = read(sd, buf, BUFSIZE)) > 0){
-        //read drei fälle
-        if(cc < 0){ // -> Das muss dann außerhalb der Schleife sein
-            printf("Error");
-        }else if(cc == 0){
-            //Kommunikationspartner hat die Verbindung beendet
-        }else{
-            
-        }
-        
-        if(write(sd,buf,cc)<0){
-            // Fehler
-        }
-        
-        
-        
-    }
-    close(sd);
-    return(sd);
-    
-}
-
-*/

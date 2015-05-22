@@ -1,10 +1,14 @@
 CC = gcc
 OBJ = file-o-req.o file-o-res.o
 
-all: result
+all: server client
 
-result : file-o-res.o
+server : file-o-res.o
 	$(CC) -o $@ file-o-res.o libsockets.a
+
+client : file-o-req.o
+	$(CC) -o $@ file-o-req.o libsockets.a
+
 
 %.o: %.c
 	$(CC) -c $<
