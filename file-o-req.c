@@ -12,6 +12,7 @@
 #include<netdb.h>
 #include<unistd.h>
 
+#include "FileHandler.h"
 
 int main(int argc, char **argv) {
     int port;

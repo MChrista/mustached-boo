@@ -20,84 +20,104 @@
 // declare here for usage before implementation
 static int handle_client(int sd, char* ipAdress);
 static int accept_client(int sd);
+static int return_http_message(int sd, char* ipAdress);
 char *file_name;
 
-int main(int argc, char **argv){
-    if(argc != 3){ 
+int main(int argc, char **argv) {
+    if (argc != 3) {
         // program name and two arguments aren't given
         printf("Invalid number of arguments!\n");
         exit(0);
-    } else if(!(access( argv[2], F_OK ) != -1 )) {
+    } else if (!(access(argv[2], F_OK) != -1)) {
         // file doesn't exist
         printf("Given file doesn't exist!\n");
         exit(0);
     }
     file_name = argv[2];
-    int port,sd;
+    int port, sd;
     port = atoi(argv[1]); //make first argument the port number
-    
+
     sd = passive_tcp(port, 5);
-    if(sd < 0){
+    if (sd < 0) {
         // server creation went wrong
         printf("Error creating server\n");
         exit(0);
     }
     accept_client(sd);
-    
+
     exit(0);
 }
 
 static int accept_client(int sd) {
     printf("Server ready to accept clients!\n");
-    int retcode,nsd;
+    int retcode, nsd;
     struct sockaddr_in from_client;
-    
-    while(1){
-        int from_client_len = sizeof(from_client);
-        nsd = accept(sd,(struct sockaddr*)&from_client, &from_client_len);
+
+    while (1) {
+        int from_client_len = sizeof (from_client);
+        nsd = accept(sd, (struct sockaddr*) &from_client, &from_client_len);
         // get ip adress and convert to string
-        struct sockaddr_in* pV4Addr = (struct sockaddr_in*)&from_client;
+        struct sockaddr_in* pV4Addr = (struct sockaddr_in*) &from_client;
         int ipAddr = pV4Addr->sin_addr.s_addr;
         char str[INET_ADDRSTRLEN];
-        inet_ntop( AF_INET, &ipAddr, str, INET_ADDRSTRLEN );
-        
-        int pid,i,j;
-        pid=fork();
-        
-        if(pid == 0){
+        inet_ntop(AF_INET, &ipAddr, str, INET_ADDRSTRLEN);
+
+        int pid, i, j;
+        pid = fork();
+
+        if (pid == 0) {
             /*
              * Kindprozess
              */
-            handle_client(nsd, str);
+            return_http_message(nsd, str);
             exit(0);
-            
-        }else if(pid > 0){
+
+        } else if (pid > 0) {
             /*
              * Elternprozess
              */
-            
-        }else{
+
+        } else {
             /*
              * Error
              */
             exit(0);
-            
+
         }
-        
-        
-        }
+
+
+    }
     return nsd;
+}
+
+static int return_http_message(int sd, char* ipAdress) {
+    printf("%s: %s\n", ipAdress, "client connected!");
+    char response[] = "HTTP/1.1 200 OK\r\n"
+            "Content-Type: text/html; charset=UTF-8\r\n\r\n"
+            "<!DOCTYPE html><html><head><title>Bye-bye baby bye-bye</title>"
+            "<style>body { background-color: #111 }"
+            "h1 { font-size:4cm; text-align: center; color: black;"
+            " text-shadow: 0 0 2mm red}</style></head>"
+            "<body><h1>Goodbye, world!</h1></body></html>\r\n";
+
+
+    if (write(sd, response, sizeof(response)-1) < 0) {
+        printf("%s\n", "Writing to the client went wrong!");
+    }
+    printf("%s: %s\n", ipAdress, "client disconnected!");
+    close(sd);
+
 }
 
 static int handle_client(int sd, char* ipAdress) {
     printf("%s: %s\n", ipAdress, "client connected!");
     char buf[BUFSIZE];
     int cc; //Character count
-    while( (cc = read(sd, buf, BUFSIZE)) > 0){
+    while ((cc = read(sd, buf, BUFSIZE)) > 0) {
         //read drei fälle
-        if(cc < 0){ // -> Das muss dann außerhalb der Schleife sein
+        if (cc < 0) { // -> Das muss dann außerhalb der Schleife sein
             printf("Error");
-        }else if(cc == 0){
+        } else if (cc == 0) {
             //Kommunikationspartner hat die Verbindung beendet
             printf("%s\n", "communication partner closed the connection!");
         }
@@ -108,29 +128,29 @@ static int handle_client(int sd, char* ipAdress) {
         long lSize;
         char *buffer;
 
-        fp = fopen ( file_name , "rb" );
-        if( !fp ) perror(file_name),exit(1);
+        fp = fopen(file_name, "rb");
+        if (!fp) perror(file_name), exit(1);
 
-        fseek( fp , 0L , SEEK_END);
-        lSize = ftell( fp );
-        rewind( fp );
+        fseek(fp, 0L, SEEK_END);
+        lSize = ftell(fp);
+        rewind(fp);
 
         /* allocate memory for entire content */
-        buffer = calloc( 1, lSize+1 );
-        if( !buffer ) fclose(fp),fputs("memory alloc fails",stderr),exit(1);
+        buffer = calloc(1, lSize + 1);
+        if (!buffer) fclose(fp), fputs("memory alloc fails", stderr), exit(1);
 
         /* copy the file into the buffer */
-        if( 1!=fread( buffer , lSize, 1 , fp) )
-        fclose(fp),free(buffer),fputs("entire read fails",stderr),exit(1);
+        if (1 != fread(buffer, lSize, 1, fp))
+            fclose(fp), free(buffer), fputs("entire read fails", stderr), exit(1);
 
         /* do your work here, buffer is a string contains the whole text */
 
         // cc-2 weil vom telnet immer noch /n (Return) abgezogen werden muss!
-        int length = cc-2;
+        int length = cc - 2;
         printf("%s: client to server: %.*s\n", ipAdress, length, buf);
         printf("%s: server to client: %s\n", ipAdress, buffer);
-        
-        if(write(sd,buffer,lSize)<0){
+
+        if (write(sd, buffer, lSize) < 0) {
             printf("%s\n", "Writing to the client went wrong!");
         }
         // close file buffer
@@ -139,5 +159,5 @@ static int handle_client(int sd, char* ipAdress) {
     }
     printf("%s: %s\n", ipAdress, "client disconnected!");
     close(sd);
-    return(sd);
+    return (sd);
 }
