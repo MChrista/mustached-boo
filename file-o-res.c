@@ -55,14 +55,36 @@ static int accept_client(int sd) {
     while(1){
         int from_client_len = sizeof(from_client);
         nsd = accept(sd,(struct sockaddr*)&from_client, &from_client_len);
-
         // get ip adress and convert to string
         struct sockaddr_in* pV4Addr = (struct sockaddr_in*)&from_client;
         int ipAddr = pV4Addr->sin_addr.s_addr;
         char str[INET_ADDRSTRLEN];
         inet_ntop( AF_INET, &ipAddr, str, INET_ADDRSTRLEN );
-
-        handle_client(nsd, str);
+        
+        int pid,i,j;
+        pid=fork();
+        
+        if(pid == 0){
+            /*
+             * Kindprozess
+             */
+            handle_client(nsd, str);
+            exit(0);
+            
+        }else if(pid > 0){
+            /*
+             * Elternprozess
+             */
+            
+        }else{
+            /*
+             * Error
+             */
+            exit(0);
+            
+        }
+        
+        
         }
     return nsd;
 }
