@@ -12,39 +12,21 @@
 #include<netdb.h>
 #include<unistd.h>
 
-#include "FileHandler.h"
+#include "helpers/FileHandler.h"
 
 int main(int argc, char **argv) {
     int port;
     port = atoi(argv[2]);
     char *file_name = argv[3];
+    int fileSize=0;
+    char buffer[BUFSIZE];
 
-    FILE *fp;
-    long lSize;
-    char *buffer;
-
-    fp = fopen(file_name, "rb");
-    if (!fp) perror(file_name), exit(1);
-
-    fseek(fp, 0L, SEEK_END);
-    lSize = ftell(fp);
-    rewind(fp);
-
-    /* allocate memory for entire content */
-    buffer = calloc(1, lSize + 1);
-    if (!buffer) fclose(fp), fputs("memory alloc fails", stderr), exit(1);
-
-    /* copy the file into the buffer */
-    if (1 != fread(buffer, lSize, 1, fp))
-        fclose(fp), free(buffer), fputs("entire read fails", stderr), exit(1);
-
-    /* do your work here, buffer is a string contains the whole text */
+    //Hier koennte man noch überprüfen, ob das lesen erfolgreich war
+    openFile(buffer,file_name,&fileSize);
 
     // cc-2 weil vom telnet immer noch /n (Return) abgezogen werden muss!
     //int length = cc-2;
 
-
-    // close file buffer
 
     //Socket Descriptor
     //sd < 0 Fehler
@@ -56,11 +38,11 @@ int main(int argc, char **argv) {
 
     }
 
-    if (write(sd, buffer, lSize) < 0) {
+    if (write(sd, buffer, fileSize) < 0) {
         printf("%s\n", "Writing to the client went wrong!");
     }
 
-    printf("client to Server: %s\n\n", buffer);
+    printf("Client to server: %.*s\n", fileSize, buffer);
 
     int cc;
     char buf[BUFSIZE];
@@ -68,8 +50,6 @@ int main(int argc, char **argv) {
         int length = cc;
         printf("server to client: %.*s\n", length, buf);
     }
-    fclose(fp);
-    free(buffer);
     close(sd);
     exit(0);
 

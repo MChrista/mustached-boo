@@ -1,1 +1,0 @@
-int openFile(char *buffer, char *file_name, int *length);

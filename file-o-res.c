@@ -17,6 +17,8 @@
 #include "libsockets/socket_info.h"
 #include "libsockets/socket_io.h"
 
+#include "helpers/FileHandler.h"
+
 // declare here for usage before implementation
 static int handle_client(int sd, char* ipAdress);
 static int accept_client(int sd);
@@ -69,7 +71,8 @@ static int accept_client(int sd) {
             /*
              * Kindprozess
              */
-            return_http_message(nsd, str);
+            //return_http_message(nsd, str);
+            handle_client(nsd, str);
             exit(0);
 
         } else if (pid > 0) {
@@ -123,39 +126,22 @@ static int handle_client(int sd, char* ipAdress) {
         }
 
         // read file and convert to string
+        int fileSize=0;
+        char buffer[BUFSIZE];
 
-        FILE *fp;
-        long lSize;
-        char *buffer;
-
-        fp = fopen(file_name, "rb");
-        if (!fp) perror(file_name), exit(1);
-
-        fseek(fp, 0L, SEEK_END);
-        lSize = ftell(fp);
-        rewind(fp);
-
-        /* allocate memory for entire content */
-        buffer = calloc(1, lSize + 1);
-        if (!buffer) fclose(fp), fputs("memory alloc fails", stderr), exit(1);
-
-        /* copy the file into the buffer */
-        if (1 != fread(buffer, lSize, 1, fp))
-            fclose(fp), free(buffer), fputs("entire read fails", stderr), exit(1);
+        //Hier koennte man noch überprüfen, ob das lesen erfolgreich war
+        openFile(buffer,file_name,&fileSize);
 
         /* do your work here, buffer is a string contains the whole text */
 
         // cc-2 weil vom telnet immer noch /n (Return) abgezogen werden muss!
         int length = cc - 2;
         printf("%s: client to server: %.*s\n", ipAdress, length, buf);
-        printf("%s: server to client: %s\n", ipAdress, buffer);
+        printf("%s: server to client: %.*s\n", ipAdress, fileSize,buffer);
 
-        if (write(sd, buffer, lSize) < 0) {
+        if (write(sd, buffer, fileSize) < 0) {
             printf("%s\n", "Writing to the client went wrong!");
         }
-        // close file buffer
-        fclose(fp);
-        free(buffer);
     }
     printf("%s: %s\n", ipAdress, "client disconnected!");
     close(sd);

@@ -12,20 +12,10 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-#include "./FileHandler.h"
+#include "FileHandler.h"
 
 
 int openFile(char *buffer, char *file_name, int *length);
-
-int main(int argc, char **argv){
-    char buffer[BUFSIZE];
-    char *file_name = argv[1];
-    int bufferlength = 0;
-    printf("Bufferlange ist %i\n",bufferlength);
-    openFile(buffer,file_name,&bufferlength);
-    printf("server to client: %.*s\n", bufferlength, buffer);
-    exit(0);
-}
 
 
 int openFile(char *buffer, char *file_name, int *length){
@@ -34,7 +24,6 @@ int openFile(char *buffer, char *file_name, int *length){
     int cc;
     while ((cc = read(fd, buffer, BUFSIZE)) > 0) {
         *length = cc;
-        printf("server to client: %.*s\n", *length, buffer);
     }
     close(fd);
     return fd;
