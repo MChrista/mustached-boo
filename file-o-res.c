@@ -2,80 +2,84 @@
 
 #include<stdio.h>
 #include<stdlib.h>
-#include<string.h>
-#include<sys/socket.h>
-#include<sys/types.h>
-#include<sys/errno.h>
-#include<sys/signal.h>
+//#include<string.h>
+//#include<sys/socket.h>
+//#include<sys/types.h>
+//#include<sys/errno.h>
+//#include<sys/signal.h>
 #include<sys/time.h>
 #include<sys/resource.h>
-#include<netinet/in.h>
-#include<arpa/inet.h>
-#include<netdb.h>
+//#include<netinet/in.h>
+//#include<arpa/inet.h>
+//#include<netdb.h>
 #include<unistd.h>
-#include<stdarg.h>
+//#include<stdarg.h>
 #include<time.h>
-#include "libsockets/passive_tcp.h"
-#include "libsockets/connect_tcp.h"
+//#include "libsockets/passive_tcp.h"
+//#include "libsockets/connect_tcp.h"
 #include "libsockets/socket_info.h"
-#include "libsockets/socket_io.h"
+//#include "libsockets/socket_io.h"
 
-#include "helpers/FileHandler.h"
+//#include "helpers/FileHandler.h"
 
 // declare here for usage before implementation
-static int handle_client(int sd, char* ipAdress);
 static int accept_client(int sd);
-static int return_http_message(int sd, char* ipAdress, int port);
-char *file_name;
+static int handle_client(int sd, char* ipAddress);
+static int return_http_message(int sd, char* ipAddress, int port);
+char *file_name; /* pointer to the response file */
 
+/*
+ * Main function
+ * arguments: port number and response file
+ */
 int main(int argc, char **argv) {
-    if (argc != 3) {
-        // program name and two arguments aren't given
+    if (argc != 3) { /* too few or too many arguments */
         printf("Invalid number of arguments!\n");
         exit(0);
-    } else if (!(access(argv[2], F_OK) != -1)) {
-        // file doesn't exist
+    } else if (!(access(argv[2], F_OK) != -1)) { /* file doesn't exist */
         printf("Given file doesn't exist!\n");
         exit(0);
+    } else { /* creating socket */
+        int port, sd;           /* port and socket descriptor */
+        port = atoi(argv[1]);   /* first argument is the port number */
+        file_name = argv[2];    /* second argument is the response file */
+        sd = passive_tcp(port, 5);
+        if (sd < 0) { /* socket creation went wrong */
+            printf("Error creating socket\n");
+            exit(0);
+        }
+        /* start accepting clients on the socket */
+        accept_client(sd);
     }
-    file_name = argv[2];
-    int port, sd;
-    port = atoi(argv[1]); //make first argument the port number
-
-    sd = passive_tcp(port, 5);
-    if (sd < 0) {
-        // server creation went wrong
-        printf("Error creating server\n");
-        exit(0);
-    }
-    accept_client(sd);
-
     exit(0);
 }
 
+/*
+ * accept clients on socket
+ * arguments: socket descriptor
+ */
 static int accept_client(int sd) {
     printf("Server ready to accept clients!\n");
-    int retcode, nsd;
-    struct sockaddr_in from_client;
+    int retcode, nsd; /* return code and scocket descriptor */
+    struct sockaddr_in from_client; /* an internet endpoint address */
+    int from_client_len = sizeof (from_client); /* size of struct */
 
-    while (1) {
-        int from_client_len = sizeof (from_client);
+    while (1) { /* while true accept clients */
         nsd = accept(sd, (struct sockaddr*) &from_client, &from_client_len);
-        // get ip adress and convert to string
+        
+        /* get client ip adress and convert it */
         struct sockaddr_in* pV4Addr = (struct sockaddr_in*) &from_client;
         int ipAddr = pV4Addr->sin_addr.s_addr;
         char str[INET_ADDRSTRLEN];
         inet_ntop(AF_INET, &ipAddr, str, INET_ADDRSTRLEN);
 
+        /* get client port number */
         int portNumber = ntohs(from_client.sin_port);
 
-        int pid, i, j;
+        int pid; /* process id */
         pid = fork();
 
-        if (pid == 0) {
-            /*
-             * Kindprozess
-             */
+        if (pid == 0) { /* child process */
             struct rusage ru;
             struct timeval utime;
             struct timeval stime;
@@ -88,35 +92,25 @@ static int accept_client(int sd) {
             getrusage(RUSAGE_SELF, &ru);
             utime = ru.ru_utime;
             stime = ru.ru_stime;
-            printf("%s %d\tuser time: %ld.%06ld\n\t\tsyst time: %ld.%06ld\n\t\treal time: %ld.%06ld\n", "Prozess", getpid(), 
+            printf("%s %d\tuser time: %ld.%06ld\n\t\tsyst time: %ld.%06ld\n\t\treal time: %ld.%06ld\n", "process\t", getpid(), 
                 (long int)utime.tv_sec, (long int)utime.tv_usec, 
                 (long int)stime.tv_sec, (long int)stime.tv_usec,
                 (long int)tval_result.tv_sec, (long int)tval_result.tv_usec);
             exit(0);
 
-        } else if (pid > 0) {
-            /*
-             * Elternprozess
-             */
-
-        } else {
-            /*
-             * Error
-             */
+        } else if (pid > 0) { /* parent process */
+            // TODO
+        } else { /* error while forking */
             exit(0);
-
         }
-
-
     }
     return nsd;
 }
 
-static int return_http_message(int sd, char* ipAdress, int port) {
-    
-    printf("%s:%d: %s\n", ipAdress, port, "client connected!");
+static int return_http_message(int sd, char* ipAddress, int port) {
+    printf("%s:%d: %s\n", ipAddress, port, "client connected!");
 
-    // getting and formating the time to rfc 2616
+    /* get time and format to rfc 2616 */
     time_t rawtime;
     struct tm * timeinfo;
     char timeString [80];
@@ -149,30 +143,17 @@ static int return_http_message(int sd, char* ipAdress, int port) {
     strcat(response, integer_string);
     strcat(response,"\r\n\r\n");
     strcat(response,body);
-    
-    
-    
-    /*
-    char response[] = "HTTP/1.1 200 OK\r\n"
-            "Content-Type: text/html; charset=UTF-8\r\n"
-            "Content-Length: 1000\r\n\r\n"
-            "<!DOCTYPE html><html><head><title>Bye-bye baby bye-bye</title>"
-            "<style>body { background-color: #111 }"
-            "h1 { font-size:4cm; text-align: center; color: black;"
-            " text-shadow: 0 0 2mm red}</style></head>"
-            "<body><h1>Goodbye, world!</h1></body></html>\r\n";
-    */
 
     if (write(sd, response, strlen(response)-1) < 0) {
         printf("%s\n", "Writing to the client went wrong!");
     }
-    printf("%s:%d: %s\n", ipAdress, port, "client disconnected!");
+    printf("%s:%d: %s\n", ipAddress, port, "client disconnected!");
     close(sd);
 
 }
 
-static int handle_client(int sd, char* ipAdress) {
-    printf("%s: %s\n", ipAdress, "client connected!");
+static int handle_client(int sd, char* ipAddress) {
+    printf("%s: %s\n", ipAddress, "client connected!");
     char buf[BUFSIZE];
     int cc; //Character count
     while ((cc = read(sd, buf, BUFSIZE)) > 0) {
@@ -191,18 +172,16 @@ static int handle_client(int sd, char* ipAdress) {
         //Hier koennte man noch überprüfen, ob das lesen erfolgreich war
         openFile(buffer,file_name,&fileSize);
 
-        /* do your work here, buffer is a string contains the whole text */
-
         // cc-2 weil vom telnet immer noch /n (Return) abgezogen werden muss!
         int length = cc - 2;
-        printf("%s: client to server: %.*s\n", ipAdress, length, buf);
-        printf("%s: server to client: %.*s\n", ipAdress, fileSize,buffer);
+        printf("%s: client to server: %.*s\n", ipAddress, length, buf);
+        printf("%s: server to client: %.*s", ipAddress, fileSize, buffer);
 
         if (write(sd, buffer, fileSize) < 0) {
             printf("%s\n", "Writing to the client went wrong!");
         }
     }
-    printf("%s: %s\n", ipAdress, "client disconnected!");
+    printf("%s: %s\n", ipAddress, "client disconnected!");
     close(sd);
     return (sd);
 }
