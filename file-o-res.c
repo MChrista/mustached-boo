@@ -23,7 +23,7 @@
 // declare here for usage before implementation
 static int handle_client(int sd, char* ipAdress);
 static int accept_client(int sd);
-static int return_http_message(int sd, char* ipAdress);
+static int return_http_message(int sd, char* ipAdress, int port);
 char *file_name;
 
 int main(int argc, char **argv) {
@@ -65,6 +65,8 @@ static int accept_client(int sd) {
         char str[INET_ADDRSTRLEN];
         inet_ntop(AF_INET, &ipAddr, str, INET_ADDRSTRLEN);
 
+        int portNumber = ntohs(from_client.sin_port);
+
         int pid, i, j;
         pid = fork();
 
@@ -72,7 +74,7 @@ static int accept_client(int sd) {
             /*
              * Kindprozess
              */
-            return_http_message(nsd, str);
+            return_http_message(nsd, str, portNumber);
             //handle_client(nsd, str);
             exit(0);
 
@@ -94,9 +96,9 @@ static int accept_client(int sd) {
     return nsd;
 }
 
-static int return_http_message(int sd, char* ipAdress) {
+static int return_http_message(int sd, char* ipAdress, int port) {
     
-    printf("%s: %s\n", ipAdress, "client connected!");
+    printf("%s:%d: %s\n", ipAdress, port, "client connected!");
 
     // getting and formating the time to rfc 2616
     time_t rawtime;
@@ -148,7 +150,7 @@ static int return_http_message(int sd, char* ipAdress) {
     if (write(sd, response, strlen(response)-1) < 0) {
         printf("%s\n", "Writing to the client went wrong!");
     }
-    printf("%s: %s\n", ipAdress, "client disconnected!");
+    printf("%s:%d: %s\n", ipAdress, port, "client disconnected!");
     close(sd);
 
 }
