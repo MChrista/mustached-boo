@@ -7,6 +7,8 @@
 #include<sys/types.h>
 #include<sys/errno.h>
 #include<sys/signal.h>
+#include<sys/time.h>
+#include<sys/resource.h>
 #include<netinet/in.h>
 #include<arpa/inet.h>
 #include<netdb.h>
@@ -74,8 +76,22 @@ static int accept_client(int sd) {
             /*
              * Kindprozess
              */
+            struct rusage ru;
+            struct timeval utime;
+            struct timeval stime;
+            struct timeval tval_before, tval_after, tval_result;
+            gettimeofday(&tval_before, NULL);
             return_http_message(nsd, str, portNumber);
             //handle_client(nsd, str);
+            gettimeofday(&tval_after, NULL);
+            timersub(&tval_after, &tval_before, &tval_result);
+            getrusage(RUSAGE_SELF, &ru);
+            utime = ru.ru_utime;
+            stime = ru.ru_stime;
+            printf("%s %d\tuser time: %ld.%06ld\n\t\tsyst time: %ld.%06ld\n\t\treal time: %ld.%06ld\n", "Prozess", getpid(), 
+                (long int)utime.tv_sec, (long int)utime.tv_usec, 
+                (long int)stime.tv_sec, (long int)stime.tv_usec,
+                (long int)tval_result.tv_sec, (long int)tval_result.tv_usec);
             exit(0);
 
         } else if (pid > 0) {
