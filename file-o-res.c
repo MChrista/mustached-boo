@@ -71,8 +71,8 @@ static int accept_client(int sd) {
             /*
              * Kindprozess
              */
-            //return_http_message(nsd, str);
-            handle_client(nsd, str);
+            return_http_message(nsd, str);
+            //handle_client(nsd, str);
             exit(0);
 
         } else if (pid > 0) {
@@ -96,7 +96,8 @@ static int accept_client(int sd) {
 static int return_http_message(int sd, char* ipAdress) {
     printf("%s: %s\n", ipAdress, "client connected!");
     char response[] = "HTTP/1.1 200 OK\r\n"
-            "Content-Type: text/html; charset=UTF-8\r\n\r\n"
+            "Content-Type: text/html; charset=UTF-8\r\n"
+            "Content-Length: 1000\r\n\r\n"
             "<!DOCTYPE html><html><head><title>Bye-bye baby bye-bye</title>"
             "<style>body { background-color: #111 }"
             "h1 { font-size:4cm; text-align: center; color: black;"
