@@ -94,7 +94,32 @@ static int accept_client(int sd) {
 }
 
 static int return_http_message(int sd, char* ipAdress) {
+    
     printf("%s: %s\n", ipAdress, "client connected!");
+    
+    char body[] = "<!DOCTYPE html><html><head><title>Bye-bye baby bye-bye</title>"
+            "</head>"
+            "<body><h1>Goodbye, world ihr niggas!</h1></body></html>\r\n";  
+    
+    char header[] = "HTTP/1.1 200 OK\r\n"
+            "Content-Type: text/html; charset=UTF-8\r\n";   
+    
+    char integer_string[32];
+    int integer = strlen(body)-1;
+    sprintf(integer_string, "%d", integer);
+    
+    char response[BUFSIZE];
+    
+    
+    strcpy(response,header);
+    strcat(response,"Content-Length: ");
+    strcat(response, integer_string);
+    strcat(response,"\r\n\r\n");
+    strcat(response,body);
+    
+    
+    
+    /*
     char response[] = "HTTP/1.1 200 OK\r\n"
             "Content-Type: text/html; charset=UTF-8\r\n"
             "Content-Length: 1000\r\n\r\n"
@@ -103,9 +128,9 @@ static int return_http_message(int sd, char* ipAdress) {
             "h1 { font-size:4cm; text-align: center; color: black;"
             " text-shadow: 0 0 2mm red}</style></head>"
             "<body><h1>Goodbye, world!</h1></body></html>\r\n";
+    */
 
-
-    if (write(sd, response, sizeof(response)-1) < 0) {
+    if (write(sd, response, strlen(response)-1) < 0) {
         printf("%s\n", "Writing to the client went wrong!");
     }
     printf("%s: %s\n", ipAdress, "client disconnected!");
