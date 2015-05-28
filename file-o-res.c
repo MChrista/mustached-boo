@@ -12,6 +12,7 @@
 #include<netdb.h>
 #include<unistd.h>
 #include<stdarg.h>
+#include<time.h>
 #include "libsockets/passive_tcp.h"
 #include "libsockets/connect_tcp.h"
 #include "libsockets/socket_info.h"
@@ -96,10 +97,24 @@ static int accept_client(int sd) {
 static int return_http_message(int sd, char* ipAdress) {
     
     printf("%s: %s\n", ipAdress, "client connected!");
+
+    // getting and formating the time to rfc 2616
+    time_t rawtime;
+    struct tm * timeinfo;
+    char timeString [80];
+
+    time (&rawtime);
+    timeinfo = localtime (&rawtime);
+
+    strftime (timeString,80,"%a, %d %b %Y %T %z %p.",timeinfo);
+    //printf("%s\n", buffer);
     
-    char body[] = "<!DOCTYPE html><html><head><title>Bye-bye baby bye-bye</title>"
+    char body[BUFSIZE] = "<!DOCTYPE html><html><head><title>Bye-bye baby bye-bye</title>"
             "</head>"
-            "<body><h1>Goodbye, world ihr niggas!</h1></body></html>\r\n";  
+            "<body><h1>";  
+
+    strcat(body, timeString);
+    strcat(body, "</h1></body></html>\r\n");
     
     char header[] = "HTTP/1.1 200 OK\r\n"
             "Content-Type: text/html; charset=UTF-8\r\n";   
