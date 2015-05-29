@@ -4,9 +4,9 @@
 #include<stdlib.h>
 //#include<string.h>
 //#include<sys/socket.h>
-//#include<sys/types.h>
+#include<sys/types.h>
 //#include<sys/errno.h>
-//#include<sys/signal.h>
+#include<sys/signal.h>
 #include<sys/time.h>
 #include<sys/resource.h>
 //#include<netinet/in.h>
@@ -15,6 +15,7 @@
 #include<unistd.h>
 //#include<stdarg.h>
 #include<time.h>
+#include <bits/signum.h>
 //#include "libsockets/passive_tcp.h"
 //#include "libsockets/connect_tcp.h"
 #include "libsockets/socket_info.h"
@@ -80,6 +81,7 @@ static int accept_client(int sd) {
         pid = fork();
 
         if (pid == 0) { /* child process */
+            close(sd);
             struct rusage ru;
             struct timeval utime;
             struct timeval stime;
@@ -99,7 +101,8 @@ static int accept_client(int sd) {
             exit(0);
 
         } else if (pid > 0) { /* parent process */
-            // TODO
+            close(nsd);
+            // TODO: SIGHANDLER SIGCHILD
         } else { /* error while forking */
             exit(0);
         }
@@ -121,7 +124,7 @@ static int return_http_message(int sd, char* ipAddress, int port) {
     strftime (timeString,80,"%a, %d %b %Y %T %z %p.",timeinfo);
     //printf("%s\n", buffer);
     
-    char body[BUFSIZE] = "<!DOCTYPE html><html><head><title>Bye-bye baby bye-bye</title>"
+    char body[BUFSIZE] = "<!DOCTYPE html><html><head><title>Timestamp</title>"
             "</head>"
             "<body><h1>";  
 
@@ -149,6 +152,7 @@ static int return_http_message(int sd, char* ipAddress, int port) {
     }
     printf("%s:%d: %s\n", ipAddress, port, "client disconnected!");
     close(sd);
+    exit(sd);
 
 }
 
@@ -183,5 +187,5 @@ static int handle_client(int sd, char* ipAddress) {
     }
     printf("%s: %s\n", ipAddress, "client disconnected!");
     close(sd);
-    return (sd);
+    exit(sd);
 }
