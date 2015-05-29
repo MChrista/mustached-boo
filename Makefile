@@ -1,7 +1,11 @@
 CC = gcc
-OBJ = file-o-req.o file-o-res.o FileHandler.o
+OBJ = file-o-req.o file-o-res.o
 
-all: client server
+all: libs client server
+
+libs :
+	cd libsockets && $(MAKE)
+	cd helpers && $(MAKE)
 
 server : file-o-res.o
 	$(CC) -o $@ file-o-res.o libsockets/libsockets.a helpers/helpers.a
@@ -14,3 +18,5 @@ client : file-o-req.o
 
 clean:
 	rm -f *.o client server
+	cd libsockets && $(MAKE) clean
+	cd helpers && $(MAKE) clean
