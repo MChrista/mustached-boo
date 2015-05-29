@@ -16,6 +16,7 @@
 //#include<stdarg.h>
 #include<time.h>
 #include <bits/signum.h>
+#include <sys/wait.h>
 //#include "libsockets/passive_tcp.h"
 //#include "libsockets/connect_tcp.h"
 #include "libsockets/socket_info.h"
@@ -27,6 +28,7 @@
 static int accept_client(int sd);
 static int handle_client(int sd, char* ipAddress);
 static int return_http_message(int sd, char* ipAddress, int port);
+void handler(int sig);
 char *file_name; /* pointer to the response file */
 
 /*
@@ -64,7 +66,8 @@ static int accept_client(int sd) {
     int retcode, nsd; /* return code and scocket descriptor */
     struct sockaddr_in from_client; /* an internet endpoint address */
     int from_client_len = sizeof (from_client); /* size of struct */
-
+    
+    signal(SIGCHLD, handler);
     while (1) { /* while true accept clients */
         nsd = accept(sd, (struct sockaddr*) &from_client, &from_client_len);
         
@@ -102,6 +105,7 @@ static int accept_client(int sd) {
 
         } else if (pid > 0) { /* parent process */
             close(nsd);
+            
             // TODO: SIGHANDLER SIGCHILD
         } else { /* error while forking */
             exit(0);
@@ -152,7 +156,7 @@ static int return_http_message(int sd, char* ipAddress, int port) {
     }
     printf("%s:%d: %s\n", ipAddress, port, "client disconnected!");
     close(sd);
-    exit(sd);
+    return (sd);
 
 }
 
@@ -188,4 +192,11 @@ static int handle_client(int sd, char* ipAddress) {
     printf("%s: %s\n", ipAddress, "client disconnected!");
     close(sd);
     exit(sd);
+}
+
+void handler(int sig)
+{
+    while(waitpid(-1,NULL,WNOHANG)>0){
+        
+    }
 }
