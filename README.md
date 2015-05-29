@@ -1,4 +1,4 @@
-# mustached-boo\n
+# Verteilte Systeme
 <h2>Steps to compile:</h2>
 <ol>
 	<li>run Makefile in /libsockets</li>
