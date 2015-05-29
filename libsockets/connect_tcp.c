@@ -22,21 +22,21 @@
 int
 connect_tcp(const char *host, unsigned short port)
 {
-  struct addrinfo *addressInfo;
-  char cport[5];
+  struct addrinfo *result; /* ipv6 compatible struct */
+  char cport[5];                /* port as char array */
   struct protoent  *ppe;        /* pointer to protocol information entry */
   struct sockaddr_in sin;       /* an Internet endpoint address		 */
   int s;                        /* socket descriptor                     */
   int retcode;
 
-  sprintf(cport, "%u", port);
+  sprintf(cport, "%u", port);   /* convert port */
 
   memset(&sin, 0, sizeof(sin));
   sin.sin_family = AF_INET;
   sin.sin_port = htons(port);
 
-  if ((getaddrinfo(host, cport, NULL, &addressInfo)) == 0) {
-    memcpy(&sin.sin_addr, &((struct sockaddr_in*)addressInfo->ai_addr)->sin_addr, sizeof(((struct sockaddr_in*)addressInfo->ai_addr)->sin_addr));
+  if ((getaddrinfo(host, cport, NULL, &result)) == 0) {
+    memcpy(&sin.sin_addr, &((struct sockaddr_in*)result->ai_addr)->sin_addr, sizeof(((struct sockaddr_in*)result->ai_addr)->sin_addr));
   } else if ( (sin.sin_addr.s_addr = inet_addr(host)) == INADDR_NONE ) {
     fprintf(stderr, "can't get \"%s\" host entry\n", host);
     perror("ERROR: client gethostbyname() ");
