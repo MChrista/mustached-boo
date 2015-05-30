@@ -23,15 +23,18 @@ void
 get_socket_info(struct sockaddr_in from_sa, struct socket_info *si)
 {
   struct hostent *from_he;
-
+  char str[INET_ADDRSTRLEN];
   from_he = gethostbyaddr((char *)&from_sa.sin_addr,
 			  sizeof(from_sa.sin_addr),
 			  AF_INET);
+  
+  
+  inet_ntop(AF_INET, &from_sa.sin_addr, str, INET_ADDRSTRLEN);
 
   strncpy(si->name,
-	  (from_he) ? from_he->h_name : inet_ntoa(from_sa.sin_addr),
+	  (from_he) ? from_he->h_name : inet_ntop(AF_INET, &from_sa.sin_addr, str, INET_ADDRSTRLEN),
 	  sizeof(si->name));
-  strncpy(si->addr, inet_ntoa(from_sa.sin_addr), sizeof(si->addr));
+  strncpy(si->addr, inet_ntop(AF_INET, &from_sa.sin_addr, str, INET_ADDRSTRLEN), sizeof(si->addr));
   si->port = ntohs(from_sa.sin_port);
 } /* end of get_socket_info */
 

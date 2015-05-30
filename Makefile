@@ -1,7 +1,7 @@
 CC = gcc
 OBJ = file-o-req.o file-o-res.o
 
-all: libs client server
+all: client server
 
 libs :
 	cd libsockets && $(MAKE)

@@ -66,7 +66,7 @@ static int accept_client(int sd) {
     int retcode, nsd; /* return code and scocket descriptor */
     struct sockaddr_in from_client; /* an internet endpoint address */
     int from_client_len = sizeof (from_client); /* size of struct */
-    
+    struct socket_info si;
     signal(SIGCHLD, handler);
     while (1) { /* while true accept clients */
         nsd = accept(sd, (struct sockaddr*) &from_client, &from_client_len);
@@ -76,7 +76,6 @@ static int accept_client(int sd) {
         int ipAddr = pV4Addr->sin_addr.s_addr;
         char str[INET_ADDRSTRLEN];
         inet_ntop(AF_INET, &ipAddr, str, INET_ADDRSTRLEN);
-
         /* get client port number */
         int portNumber = ntohs(from_client.sin_port);
 
@@ -105,7 +104,6 @@ static int accept_client(int sd) {
 
         } else if (pid > 0) { /* parent process */
             close(nsd);
-            
             // TODO: SIGHANDLER SIGCHILD
         } else { /* error while forking */
             exit(0);
