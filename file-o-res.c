@@ -2,27 +2,26 @@
 
 #include<stdio.h>
 #include<stdlib.h>
-//#include<string.h>
-//#include<sys/socket.h>
+#include<string.h>
+#include<sys/socket.h>
 #include<sys/types.h>
-//#include<sys/errno.h>
+#include<sys/errno.h>
 #include<sys/signal.h>
 #include<sys/time.h>
 #include<sys/resource.h>
-//#include<netinet/in.h>
-//#include<arpa/inet.h>
-//#include<netdb.h>
+#include<netinet/in.h>
+#include<arpa/inet.h>
+#include<netdb.h>
 #include<unistd.h>
-//#include<stdarg.h>
+#include<stdarg.h>
 #include<time.h>
 #include <bits/signum.h>
 #include <sys/wait.h>
-//#include "libsockets/passive_tcp.h"
-//#include "libsockets/connect_tcp.h"
+#include "libsockets/passive_tcp.h"
+#include "libsockets/connect_tcp.h"
 #include "libsockets/socket_info.h"
-//#include "libsockets/socket_io.h"
-
-//#include "helpers/FileHandler.h"
+#include "libsockets/socket_io.h"
+#include "helpers/FileHandler.h"
 
 // declare here for usage before implementation
 static int accept_client(int sd);
@@ -103,7 +102,7 @@ static int accept_client(int sd) {
             exit(0);
 
         } else if (pid > 0) { /* parent process */
-            close(nsd);
+            close(nsd); //Fehlerbehandlung hinzufuegen
             // TODO: SIGHANDLER SIGCHILD
         } else { /* error while forking */
             exit(0);
@@ -183,13 +182,13 @@ static int handle_client(int sd, char* ipAddress) {
         printf("%s: client to server: %.*s\n", ipAddress, length, buf);
         printf("%s: server to client: %.*s", ipAddress, fileSize, buffer);
 
-        if (write(sd, buffer, fileSize) < 0) {
+        if (write(sd, buffer, fileSize) < 0) { // wirte aus libsockets für größere Dateien, wrapper write
             printf("%s\n", "Writing to the client went wrong!");
         }
     }
     printf("%s: %s\n", ipAddress, "client disconnected!");
     close(sd);
-    exit(sd);
+    return (sd);
 }
 
 void handler(int sig)

@@ -18,5 +18,7 @@ client : file-o-req.o
 
 clean:
 	rm -f *.o client server
+
+cleanlibs:
 	cd libsockets && $(MAKE) clean
 	cd helpers && $(MAKE) clean

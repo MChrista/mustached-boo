@@ -11,7 +11,10 @@
 #include<arpa/inet.h>
 #include<netdb.h>
 #include<unistd.h>
-
+#include "libsockets/passive_tcp.h"
+#include "libsockets/connect_tcp.h"
+#include "libsockets/socket_info.h"
+#include "libsockets/socket_io.h"
 #include "helpers/FileHandler.h"
 
 int main(int argc, char **argv) {
@@ -35,7 +38,6 @@ int main(int argc, char **argv) {
         printf("Failed to create Socket\n");
     } else {
         printf("Success by creating Socket\n");
-
     }
 
     if (write(sd, buffer, fileSize) < 0) {
